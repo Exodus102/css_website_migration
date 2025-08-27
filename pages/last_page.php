@@ -2,7 +2,7 @@
      style="background-image: url('resources/svg/landing-page.svg');">
 
   <!-- Logo -->
-  <div class="flex items-center justify-center gap- mb-10 mt-6">
+  <div class="flex items-center justify-center gap- mb-3 mt-6">
     <img src="resources/svg/logo.svg" alt="URSatisfaction Logo" class="h-20">
     <div class="text-left">
       <h2 class="text-2xl font-bold leading-tight">
@@ -12,56 +12,62 @@
     </div>
   </div>
 
-  <!-- White Card -->
-  <div class="bg-white shadow-2xl rounded-lg w-full max-w-[90%] p-14 mx-6 min-h-[680px] mt-14">
+  <!-- White Border -->
+  <div class="bg-white shadow-2xl rounded-lg w-full max-w-[90%] p-14 mx-6 min-h-[610px] mt-14">
     <!-- Inner wrapper with extra padding -->
     <div class="w-full max-w-2xl mx-auto space-y-10 px-10">
 
       <!-- Title -->
       <div class="text-left">
-        <h1 class="text-3xl font-bold text-[#1E1E1E] mb-3 leading-snug">Getting started!</h1>
+        <h1 class="text-3xl font-bold text-[#1E1E1E] mb-3 leading-snug">Your thoughts matter!</h1>
         <p class="text-lg text-[#1E1E1E] leading-relaxed">
-          Help us understand what are we working on today by providing the following information:
+          We’d love to hear your comments and suggestions to serve you better.
         </p>
       </div>
+<!-- Form -->
+<form action="process.php" method="POST" class="space-y-8">
 
-      <!-- Form -->
-      <form action="process.php" method="POST" class="space-y-8">
-        
-        <!-- Transaction Type -->
-        <div>
-          <label class="block text-[#1E1E1E] text-lg mb-3 leading-snug">Transaction Type</label>
-          <div class="space-y-3">
-            <label class="flex items-center space-x-2">
-              <input type="radio" name="transaction_type" value="Face-to-Face" class="text-[#064089] focus:ring-[#064089] w-5 h-5">
-              <span class="text-lg text-[#1E1E1E] leading-relaxed">Face-to-Face</span>
-            </label>
-            <label class="flex items-center space-x-2">
-              <input type="radio" name="transaction_type" value="Online" class="text-[#064089] focus:ring-[#064089] w-5 h-5">
-              <span class="text-lg text-[#1E1E1E] leading-relaxed">Online</span>
-            </label>
-          </div>
-        </div>
+  <!-- Comments -->
+  <div>
+    <label class="block text-[#1E1E1E] text-lg mb-3 leading-snug">Comments and suggestions:</label>
+    <textarea 
+      name="comments" 
+      rows="4" 
+      class="w-full border border-[#1E1E1E] rounded-md px-4 py-3 text-lg text-[#1E1E1E] leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#064089]"
+    ></textarea>
+  </div>
 
-        <!-- Purpose of Visit -->
-        <div>
-          <label class="block text-[#1E1E1E] text-lg mb-3 leading-snug">Purpose of Visit or Transaction</label>
-          <textarea 
-            name="purpose" 
-            rows="4" 
-            class="w-full border border-[#1E1E1E] rounded-md px-4 py-3 text-lg text-[#1E1E1E] leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#064089]"
-            placeholder="Enter purpose here..."
-          ></textarea>
-        </div>
+  <!-- Agreement -->
+<div class="flex items-start gap-2">
+  <input type="checkbox" id="agree" name="agree" required
+         class="mt-1 w-5 h-5 text-[#064089] border-gray-300 rounded focus:ring-[#064089]">
+  <label for="agree" class="text-sm text-[#1E1E1E] leading-relaxed">
+    By ticking, you are confirming that you have read, understood, and agree to the URSatisfaction: Customer Satisfaction Survey System 
+    <a href="#" class="text-[#064089] !underline underline-offset-2 decoration-[#064089]">
+      privacy policy
+    </a> and 
+    <a href="#" class="text-[#064089] !underline underline-offset-2 decoration-[#064089]">
+      terms of services
+    </a>.
+  </label>
+</div>
 
-        <!-- Button -->
-        <div class="flex justify-end">
-          <button type="submit" class="bg-[#064089] hover:bg-blue-900 text-white text-lg font-medium px-8 py-3 rounded-md shadow-md transition">
-            Evaluate
-          </button>
-        </div>
+  <!-- Buttons -->
+  <div class="flex justify-between items-center">
+   <!-- Back Arrow -->
+    <a href="pages/first_page.php" 
+      class="bg-[#064089] hover:bg-blue-900 p-3 rounded-md shadow-md transition flex items-center justify-center">
+      <img src="resources/svg/back-arrow.svg" alt="Back" class="h-6 w-6">
+    </a>
 
-      </form>
+    <!-- Submit -->
+    <button type="submit" class="bg-[#064089] hover:bg-blue-900 text-white text-lg font-medium px-8 py-3 rounded-md shadow-md transition">
+      Submit
+    </button>
+  </div>
+
+</form>
+
     </div>
   </div>
 

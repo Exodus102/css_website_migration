@@ -2,7 +2,7 @@
      style="background-image: url('resources/svg/landing-page.svg');">
 
   <!-- Logo -->
-  <div class="flex items-center justify-center gap- mb-10 mt-6">
+  <div class="flex items-center justify-center gap- mb-5 mt-6">
     <img src="resources/svg/logo.svg" alt="URSatisfaction Logo" class="h-20">
     <div class="text-left">
       <h2 class="text-2xl font-bold leading-tight">
@@ -12,21 +12,21 @@
     </div>
   </div>
 
-  <!-- White Card -->
-  <div class="bg-white shadow-2xl rounded-lg w-full max-w-[90%] p-14 mx-6 min-h-[680px] mt-14">
+  <!-- White Border -->
+  <div class="bg-white shadow-2xl rounded-lg w-full max-w-[90%] p-14 mx-6 min-h-[620px] mt-14">
     <!-- Inner wrapper with extra padding -->
     <div class="w-full max-w-2xl mx-auto space-y-10 px-10">
 
       <!-- Title -->
       <div class="text-left">
-        <h1 class="text-3xl font-bold text-[#1E1E1E] mb-3 leading-snug">Getting started!</h1>
+        <h1 class="text-3xl font-bold text-[#1E1E1E] mb-3 leading-snug">Your thoughts matter!</h1>
         <p class="text-lg text-[#1E1E1E] leading-relaxed">
-          Help us understand what are we working on today by providing the following information:
+          We’d love to hear your comments and suggestions to serve you better.
         </p>
       </div>
 
       <!-- Form -->
-      <form action="process.php" method="POST" class="space-y-8">
+      <form action="dynamic_page.php" method="POST" class="space-y-8">
         
         <!-- Transaction Type -->
         <div>
@@ -62,6 +62,7 @@
         </div>
 
       </form>
+
     </div>
   </div>
 
