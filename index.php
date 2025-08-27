@@ -9,7 +9,7 @@
 </head>
 
 <body>
-        <?php include 'pages/first_page.php'; ?>
+        <?php include 'pages/dynamic_page.php'; ?>
     </div>
 </body>
 
