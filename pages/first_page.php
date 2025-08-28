@@ -1,5 +1,5 @@
-<div class="min-h-screen flex flex-col items-center justify-start relative bg-cover bg-center" 
-     style="background-image: url('resources/svg/landing-page.svg');">
+<div class="min-h-screen flex flex-col items-center justify-start relative bg-cover bg-center"
+  style="background-image: url('resources/svg/landing-page.svg');">
 
   <!-- Logo -->
   <div class="flex items-center justify-center gap- mb-5 mt-6">
@@ -26,8 +26,8 @@
       </div>
 
       <!-- Form -->
-      <form action="dynamic_page.php" method="POST" class="space-y-8">
-        
+      <form action="pages/dynamic_page.php" method="POST" class="space-y-8">
+
         <!-- Transaction Type -->
         <div>
           <label class="block text-[#1E1E1E] text-lg mb-3 leading-snug">Transaction Type</label>
@@ -46,12 +46,11 @@
         <!-- Purpose of Visit -->
         <div>
           <label class="block text-[#1E1E1E] text-lg mb-3 leading-snug">Purpose of Visit or Transaction</label>
-          <textarea 
-            name="purpose" 
-            rows="4" 
+          <textarea
+            name="purpose"
+            rows="4"
             class="w-full border border-[#1E1E1E] rounded-md px-4 py-3 text-lg text-[#1E1E1E] leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#064089]"
-            placeholder="Enter purpose here..."
-          ></textarea>
+            placeholder="Enter purpose here..."></textarea>
         </div>
 
         <!-- Button -->
