@@ -9,8 +9,7 @@
 </head>
 
 <body>
-        <?php include 'pages/dynamic_page.php'; ?>
-    </div>
+    <?php include 'pages/first_page.php'; ?>
 </body>
 
 </html>

@@ -1,81 +1,106 @@
-<div class="min-h-screen flex flex-col items-center justify-start relative bg-cover bg-center" 
-     style="background-image: url('resources/svg/landing-page.svg');">
+<?php
+require_once '../auth/_dbConfig/_dbConfig.php';
 
-  <!-- Logo -->
-  <div class="flex items-center justify-center gap- mb-3 mt-6">
-    <img src="resources/svg/logo.svg" alt="URSatisfaction Logo" class="h-20">
-    <div class="text-left">
-      <h2 class="text-2xl font-bold leading-tight">
-        <span class="text-[#95B3D3]">URS</span><span class="text-[#F1F7F9]">atisfaction</span>
-      </h2>
-      <p class="text-sm text-[#F1F7F9] leading-snug">We comply so URSatisfied</p>
-    </div>
-  </div>
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+  // Retrieve submitted data
+  $transactionType = isset($_POST['transaction_type']) ? $_POST['transaction_type'] : 'Not provided';
+  $purpose = isset($_POST['purpose']) ? $_POST['purpose'] : 'Not provided';
+  $answers = isset($_POST['answers']) ? $_POST['answers'] : [];
 
-  <!-- White Border -->
-  <div class="bg-white shadow-2xl rounded-lg w-full max-w-[90%] p-14 mx-6 min-h-[610px] mt-14">
-    <!-- Inner wrapper with extra padding -->
-    <div class="w-full max-w-2xl mx-auto space-y-10 px-10">
+  // Map transaction type back to string for display
+  $transactionTypeString = 'Not provided';
+  if ($transactionType === '0') {
+    $transactionTypeString = 'Face-to-Face';
+  } elseif ($transactionType === '1') {
+    $transactionTypeString = 'Online';
+  }
 
-      <!-- Title -->
+  // Use htmlspecialchars() to prevent XSS
+  $safeTransactionType = htmlspecialchars($transactionTypeString, ENT_QUOTES, 'UTF-8');
+  $safePurpose = htmlspecialchars($purpose, ENT_QUOTES, 'UTF-8');
+} else {
+  // If the page is accessed directly, redirect to the first page
+  header("Location: first_page.php");
+  exit();
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="../Tailwind/src/output.css">
+  <title>Survey Summary</title>
+</head>
+
+<body>
+  <div class="min-h-screen flex flex-col items-center justify-start relative bg-cover bg-center"
+    style="background-image: url('../resources/svg/landing-page.svg');">
+
+    <!-- Logo -->
+    <div class="flex items-center justify-center gap- mb-5 mt-6">
+      <img src="../resources/svg/logo.svg" alt="URSatisfaction Logo" class="h-20">
       <div class="text-left">
-        <h1 class="text-3xl font-bold text-[#1E1E1E] mb-3 leading-snug">Your thoughts matter!</h1>
-        <p class="text-lg text-[#1E1E1E] leading-relaxed">
-          We’d love to hear your comments and suggestions to serve you better.
-        </p>
+        <h2 class="text-2xl font-bold leading-tight">
+          <span class="text-[#95B3D3]">URS</span><span class="text-[#F1F7F9]">atisfaction</span>
+        </h2>
+        <p class="text-sm text-[#F1F7F9] leading-snug">We comply so URSatisfied</p>
       </div>
-<!-- Form -->
-<form action="process.php" method="POST" class="space-y-8">
+    </div>
 
-  <!-- Comments -->
-  <div>
-    <label class="block text-[#1E1E1E] text-lg mb-3 leading-snug">Comments and suggestions:</label>
-    <textarea 
-      name="comments" 
-      rows="4" 
-      class="w-full border border-[#1E1E1E] rounded-md px-4 py-3 text-lg text-[#1E1E1E] leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#064089]"
-    ></textarea>
-  </div>
+    <!-- White Card -->
+    <div class="bg-white shadow-2xl rounded-lg w-full max-w-[90%] p-14 mx-6 min-h-[620px] mt-14">
+      <div class="w-full max-w-2xl mx-auto space-y-10 px-10">
+        <h1 class="text-3xl font-bold text-center text-[#064089]">Thank you for your feedback!</h1>
+        <p class="text-lg text-center text-gray-600">Here is a summary of your submission.</p>
 
-  <!-- Agreement -->
-<div class="flex items-start gap-2">
-  <input type="checkbox" id="agree" name="agree" required
-         class="mt-1 w-5 h-5 text-[#064089] border-gray-300 rounded focus:ring-[#064089]">
-  <label for="agree" class="text-sm text-[#1E1E1E] leading-relaxed">
-    By ticking, you are confirming that you have read, understood, and agree to the URSatisfaction: Customer Satisfaction Survey System 
-    <a href="#" class="text-[#064089] !underline underline-offset-2 decoration-[#064089]">
-      privacy policy
-    </a> and 
-    <a href="#" class="text-[#064089] !underline underline-offset-2 decoration-[#064089]">
-      terms of services
-    </a>.
-  </label>
-</div>
+        <div class="space-y-8 border-t pt-8">
+          <div class="space-y-2">
+            <h2 class="text-xl font-semibold text-gray-800">Submission Details</h2>
+            <p><strong class="font-medium">Transaction Type:</strong> <?= $safeTransactionType ?></p>
+            <p><strong class="font-medium">Purpose of Transaction:</strong> <?= $safePurpose ?></p>
+          </div>
 
-  <!-- Buttons -->
-  <div class="flex justify-between items-center">
-   <!-- Back Arrow -->
-    <a href="pages/first_page.php" 
-      class="bg-[#064089] hover:bg-blue-900 p-3 rounded-md shadow-md transition flex items-center justify-center">
-      <img src="resources/svg/back-arrow.svg" alt="Back" class="h-6 w-6">
-    </a>
+          <div class="space-y-4">
+            <h2 class="text-xl font-semibold text-gray-800">Your Answers</h2>
+            <?php
+            if (!empty($answers)) {
+              // Prepare a statement to get question text from question_id
+              $questionIds = array_keys($answers);
+              if (!empty($questionIds)) {
+                $placeholders = implode(',', array_fill(0, count($questionIds), '?'));
+                $types = str_repeat('i', count($questionIds));
 
-    <!-- Submit -->
-    <button type="submit" class="bg-[#064089] hover:bg-blue-900 text-white text-lg font-medium px-8 py-3 rounded-md shadow-md transition">
-      Submit
-    </button>
-  </div>
+                $stmt = $conn->prepare("SELECT question_id, question FROM tbl_questionaire WHERE question_id IN ($placeholders)");
+                $stmt->bind_param($types, ...$questionIds);
+                $stmt->execute();
+                $result = $stmt->get_result();
 
-</form>
+                $questions = [];
+                while ($row = $result->fetch_assoc()) {
+                  $questions[$row['question_id']] = $row['question'];
+                }
+                $stmt->close();
 
+                echo "<ul class='list-disc list-inside space-y-2'>";
+                foreach ($answers as $question_id => $answer) {
+                  $question_text = isset($questions[$question_id]) ? htmlspecialchars($questions[$question_id], ENT_QUOTES, 'UTF-8') : "Question ID: " . htmlspecialchars($question_id);
+                  $answer_safe = htmlspecialchars($answer, ENT_QUOTES, 'UTF-8');
+                  echo "<li><strong class='font-medium'>{$question_text}:</strong> {$answer_safe}</li>";
+                }
+                echo "</ul>";
+              }
+            } else {
+              echo "<p class='text-gray-500'>No answers were submitted.</p>";
+            }
+            $conn->close();
+            ?>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
+</body>
 
-  <!-- Footer (left under the white div) -->
-  <div class="w-full max-w-[90%] mx-6 mt-4 mb-10 text-left">
-    <p class="text-[#F1F7F9] text-s">
-      © University of Rizal System - Customer Satisfaction Survey System
-    </p>
-  </div>
-
-</div>
+</html>
