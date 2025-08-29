@@ -35,14 +35,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 
 <body>
-  <div class="min-h-screen flex flex-col items-center justify-start relative bg-cover bg-center"
+  <div class="h-screen flex flex-col items-center justify-between relative bg-cover bg-center"
     style="background-image: url('../resources/svg/landing-page.svg');">
 
     <!-- Logo -->
-    <div class="flex items-center justify-center gap- mb-5 mt-6">
-      <img src="../resources/svg/logo.svg" alt="URSatisfaction Logo" class="h-20">
+    <div class="flex items-center justify-center gap-2 mb-4 mt-10">
+      <img src="../resources/svg/logo.svg" alt="URSatisfaction Logo" class="h-16">
       <div class="text-left">
-        <h2 class="text-2xl font-bold leading-tight">
+        <h2 class="text-xl font-bold leading-tight">
           <span class="text-[#95B3D3]">URS</span><span class="text-[#F1F7F9]">atisfaction</span>
         </h2>
         <p class="text-sm text-[#F1F7F9] leading-snug">We comply so URSatisfied</p>
@@ -50,22 +50,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </div>
 
     <!-- White Card -->
-    <div class="bg-white shadow-2xl rounded-lg w-full max-w-[90%] p-14 mx-6 min-h-[620px] mt-14">
-      <!-- Inner wrapper with extra padding -->
-      <div class="w-full max-w-2xl mx-auto space-y-10 px-10">
+    <div class="bg-white shadow-2xl rounded-lg w-full max-w-[90%] p-10 mx-6 min-h-[550px] flex items-center">
+      <!-- Inner wrapper -->
+      <div class="w-full max-w-xl mx-auto space-y-10 px-10">
+
+        <!-- Title and Subtitle -->
+        <div class="text-left">
+          <h1 class="text-2xl font-bold text-[#1E1E1E] mb-2 leading-snug">Your thoughts matter!</h1>
+          <p class="text-sm text-[#1E1E1E] leading-relaxed max-w-[90%]">
+            We’d love to hear your comments and suggestions to serve you better.
+          </p>
+        </div>
+
         <!-- Form -->
-        <form action="../function/_processAnswer/_processAnswer.php" method="POST" class="space-y-8">
-          <!-- Hidden fields to pass data to the next page -->
+        <form action="../function/_processAnswer/_processAnswer.php" method="POST" class="space-y-6">
+          <!-- Hidden fields -->
           <input type="hidden" name="transaction_type" value="<?= $safeTransactionType ?>">
           <input type="hidden" name="purpose" value="<?= $safePurpose ?>">
 
           <!-- Questions from Database -->
-          <div class="space-y-8 border-t pt-8">
+          <div class="space-y-6 pt-2">
             <?php
-            // Prepare and execute the query to get questions
-            // Using prepared statements to prevent SQL injection.
-            // Fetch questions for the selected type (0 or 1) AND for type 2 (common questions).
-            $stmt = $conn->prepare("SELECT question_id, question, question_type, required FROM tbl_questionaire WHERE (transaction_type = ? OR transaction_type = 2) AND status = 1 ORDER BY question_id");
+            $stmt = $conn->prepare("SELECT question_id, question, question_type, required 
+                                    FROM tbl_questionaire 
+                                    WHERE (transaction_type = ? OR transaction_type = 2) 
+                                    AND status = 1 ORDER BY question_id");
             $stmt->bind_param("i", $transactionType);
             $stmt->execute();
             $result = $stmt->get_result();
@@ -77,10 +86,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $q_type = $question['question_type'];
                 $q_required = $question['required'] ? 'required' : '';
 
-                echo "<div class='space-y-3 animate-fade-in'>";
-                echo "<label class='block text-[#1E1E1E] text-lg leading-snug font-medium'>{$q_text}</label>";
+                echo "<div class='space-y-2'>";
+                echo "<label class='block text-[#1E1E1E] text-sm mb-2 leading-snug font-medium'>{$q_text}</label>";
 
-                // Render input based on question_type
                 switch ($q_type) {
                   case 'Dropdown':
                     $choice_stmt = $conn->prepare("SELECT choice_text FROM tbl_choices WHERE question_id = ? ORDER BY choices_id");
@@ -88,7 +96,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $choice_stmt->execute();
                     $choices_result = $choice_stmt->get_result();
 
-                    echo "<select name='answers[{$q_id}]' class='mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#064089] focus:border-[#064089] sm:text-lg rounded-md' {$q_required}>";
+                    echo "<select name='answers[{$q_id}]' 
+                            class='w-full border border-[#1E1E1E] rounded-md px-3 py-2 text-sm text-[#1E1E1E] leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#064089]' 
+                            {$q_required}>";
                     echo "<option value='' disabled selected>--Please choose an option--</option>";
 
                     while ($choice = $choices_result->fetch_assoc()) {
@@ -99,8 +109,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     echo "</select>";
                     $choice_stmt->close();
                     break;
+
                   case 'Text':
-                    echo "<input type='text' name='answers[{$q_id}]' class='mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#064089] focus:border-[#064089] sm:text-lg rounded-md' {$q_required}>";
+                    echo "<input type='text' name='answers[{$q_id}]' 
+                            class='w-full border border-[#1E1E1E] rounded-md px-3 py-2 text-sm text-[#1E1E1E] leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#064089]' 
+                            {$q_required}>";
                     break;
                 }
                 echo "</div>";
@@ -113,16 +126,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             ?>
           </div>
 
-          <!-- Buttons -->
-          <div class="flex justify-between items-center">
+         <!-- Buttons -->
+          <div class="flex justify-between items-center pt-4">
             <!-- Back Arrow -->
             <a href="javascript:history.back()"
-              class="bg-[#064089] hover:bg-blue-900 p-3 rounded-md shadow-md transition flex items-center justify-center">
-              <img src="../resources/svg/back-arrow.svg" alt="Back" class="h-6 w-6">
+              class="bg-[#064089] hover:bg-blue-900 text-white text-sm font-medium px-6 py-2 rounded-md shadow-md transition flex items-center justify-center">
+              <img src="../resources/svg/back-arrow.svg" alt="Back" class="h-5 w-5">
             </a>
 
             <!-- Submit -->
-            <button type="submit" class="bg-[#064089] hover:bg-blue-900 text-white text-lg font-medium px-8 py-3 rounded-md shadow-md transition">
+            <button type="submit"
+              class="bg-[#064089] hover:bg-blue-900 text-white text-sm font-medium px-6 py-2 rounded-md shadow-md transition">
               Next
             </button>
           </div>
@@ -132,15 +146,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       </div>
     </div>
 
-    <!-- Footer (left under the white div) -->
-    <div class="w-[90%] max-w-4xl mx-6 mt-4 mb-10 text-left">
-      <p class="text-[#F1F7F9] text-sm">
+    <!-- Footer -->
+    <div class="w-full max-w-[90%] mx-6 mt-4 mb-10 text-left">
+      <p class="text-[#F1F7F9] text-s">
         © University of Rizal System - Customer Satisfaction Survey System
       </p>
     </div>
 
   </div>
-
 </body>
 
 </html>
