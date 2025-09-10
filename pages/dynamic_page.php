@@ -99,6 +99,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     echo "</select>";
                     $choice_stmt->close();
                     break;
+                  case 'Multiple Choice':
+                    $choice_stmt = $conn->prepare("SELECT choice_text FROM tbl_choices WHERE question_id = ? ORDER BY choices_id");
+                    $choice_stmt->bind_param("i", $question['question_id']);
+                    $choice_stmt->execute();
+                    $choices_result = $choice_stmt->get_result();
+
+                    echo "<div class='mt-2 flex items-center space-x-6'>";
+                    $choice_index = 0;
+                    while ($choice = $choices_result->fetch_assoc()) {
+                      $c_text = htmlspecialchars($choice['choice_text']);
+                      $radio_id = "q_{$q_id}_choice_{$choice_index}";
+                      echo "<div class='flex items-center'>";
+                      echo "<input id='{$radio_id}' name='answers[{$q_id}]' type='radio' value='{$c_text}' class='focus:ring-[#064089] h-4 w-4 text-[#064089] border-gray-300' {$q_required}>";
+                      echo "<label for='{$radio_id}' class='ml-3 block text-base text-gray-700'>{$c_text}</label>";
+                      echo "</div>";
+                      $choice_index++;
+                    }
+                    echo "</div>";
+                    $choice_stmt->close();
+                    break;
+                  case 'Description':
+                    // This is just a label, no input required.
+                    break;
                   case 'Text':
                     echo "<input type='text' name='answers[{$q_id}]' class='mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#064089] focus:border-[#064089] sm:text-lg rounded-md' {$q_required}>";
                     break;

@@ -22,23 +22,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $purpose_question_id = 1; // 💡 The purpose is treated as a response to a specific question (e.g., Question #1).
         $purpose_response = $purpose;
 
-        // Get the header value for the purpose question from the tbl_questionaire table.
-        $stmt_header = $conn->prepare("SELECT header FROM tbl_questionaire WHERE question_id = ?");
+        // Get the header and question_rendering for the purpose question from the tbl_questionaire table.
+        $stmt_header = $conn->prepare("SELECT header, question_rendering FROM tbl_questionaire WHERE question_id = ?");
         $stmt_header->bind_param("i", $purpose_question_id);
         $stmt_header->execute();
         $header_result = $stmt_header->get_result();
         $header_row = $header_result->fetch_assoc();
-        $header_value = $header_row ? $header_row['header'] : null;
+        $header_value = $header_row['header'] ?? '0';
+        $question_rendering = $header_row['question_rendering'] ?? null;
         $stmt_header->close();
 
+        $final_header_value = $header_value;
+        $final_question_rendering_value = null;
+
+        if ($question_rendering === 'QoS' || $question_rendering === 'Su') {
+            $final_header_value = '1';
+            $final_question_rendering_value = $question_rendering;
+        }
+
         $stmt_purpose = $conn->prepare(
-            "INSERT INTO tbl_responses (question_id, response, header, transaction_type) VALUES (?, ?, ?, ?)"
+            "INSERT INTO tbl_responses (question_id, response, header, transaction_type, question_rendering) VALUES (?, ?, ?, ?, ?)"
         );
         if ($stmt_purpose === false) {
             throw new Exception('Database prepare failed for purpose insert: ' . $conn->error);
         }
 
-        $stmt_purpose->bind_param("isss", $purpose_question_id, $purpose_response, $header_value, $transactionType);
+        $stmt_purpose->bind_param("issss", $purpose_question_id, $purpose_response, $final_header_value, $transactionType, $final_question_rendering_value);
         $stmt_purpose->execute();
 
         // Get the auto-generated `id` from the purpose insert. This is our `response_id`.
@@ -55,7 +64,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Step 2: Loop through the remaining answers and insert them with the same `response_id`.
         $stmt_rest = $conn->prepare(
-            "INSERT INTO tbl_responses (response_id, question_id, response, header, transaction_type) VALUES (?, ?, ?, ?, ?)"
+            "INSERT INTO tbl_responses (response_id, question_id, response, header, transaction_type, question_rendering) VALUES (?, ?, ?, ?, ?, ?)"
         );
         if ($stmt_rest === false) {
             throw new Exception('Database prepare for subsequent inserts failed: ' . $conn->error);
@@ -65,17 +74,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $question_id = $q_id;
             $response = is_array($resp) ? implode(', ', $resp) : $resp;
 
-            // Get the header value for the current question from the tbl_questionaire table.
-            $stmt_header_rest = $conn->prepare("SELECT header FROM tbl_questionaire WHERE question_id = ?");
+            // Get the header and question_rendering for the current question from the tbl_questionaire table.
+            $stmt_header_rest = $conn->prepare("SELECT header, question_rendering FROM tbl_questionaire WHERE question_id = ?");
             $stmt_header_rest->bind_param("i", $question_id);
             $stmt_header_rest->execute();
             $header_result_rest = $stmt_header_rest->get_result();
             $header_row_rest = $header_result_rest->fetch_assoc();
-            $header_value_rest = $header_row_rest ? $header_row_rest['header'] : null;
+            $header_value_rest = $header_row_rest['header'] ?? '0';
+            $question_rendering_rest = $header_row_rest['question_rendering'] ?? null;
             $stmt_header_rest->close();
 
+            $final_header_value_rest = $header_value_rest;
+            $final_question_rendering_value_rest = null;
+            if ($question_rendering_rest === 'QoS' || $question_rendering_rest === 'Su') {
+                $final_header_value_rest = '1';
+                $final_question_rendering_value_rest = $question_rendering_rest;
+            }
+
             // Bind all parameters for the current record.
-            $stmt_rest->bind_param("iisss", $response_id, $question_id, $response, $header_value_rest, $transactionType);
+            $stmt_rest->bind_param("iissss", $response_id, $question_id, $response, $final_header_value_rest, $transactionType, $final_question_rendering_value_rest);
             $stmt_rest->execute();
         }
 
@@ -92,6 +109,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $conn->close();
     }
 } else {
-    header("Location: first_page.php");
+    header("Location: ../index.php");
     exit();
 }
