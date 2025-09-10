@@ -6,7 +6,11 @@ module.exports = {
     "../function/**/*.{html,js,php}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ["SF Pro", "sans-serif"],
+      },
+    },
   },
   plugins: [],
 };

@@ -20,7 +20,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $safePurpose = htmlspecialchars($purpose, ENT_QUOTES, 'UTF-8');
 } else {
   // If the page is accessed directly, redirect to the first page
-  header("Location: first_page.php");
+  header("Location: ../index.php");
   exit();
 }
 ?>
