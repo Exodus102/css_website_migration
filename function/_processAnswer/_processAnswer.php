@@ -3,12 +3,16 @@ require_once '../../auth/_dbConfig/_dbConfig.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Retrieve submitted data
+    $campusName = isset($_POST['campus_name']) ? trim($_POST['campus_name']) : null;
+    $divisionName = isset($_POST['division_name']) ? trim($_POST['division_name']) : null;
+    $unitName = isset($_POST['unit_name']) ? trim($_POST['unit_name']) : null;
     $transactionType = isset($_POST['transaction_type']) ? $_POST['transaction_type'] : null;
     $purpose = isset($_POST['purpose']) ? trim($_POST['purpose']) : null;
     $answers = isset($_POST['answers']) ? $_POST['answers'] : [];
+    $comment = isset($_POST['comment']) ? trim($_POST['comment']) : '';
 
     // Validate that we have answers to process
-    if (empty($answers) || $transactionType === null || $purpose === null) {
+    if ($transactionType === null || $purpose === null || $campusName === null || $divisionName === null || $unitName === null) {
         header("Location: first_page.php");
         exit();
     }
@@ -41,13 +45,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         $stmt_purpose = $conn->prepare(
-            "INSERT INTO tbl_responses (question_id, response, header, transaction_type, question_rendering) VALUES (?, ?, ?, ?, ?)"
+            "INSERT INTO tbl_responses (question_id, response, header, transaction_type, question_rendering, comment) VALUES (?, ?, ?, ?, ?, ?)"
         );
         if ($stmt_purpose === false) {
             throw new Exception('Database prepare failed for purpose insert: ' . $conn->error);
         }
 
-        $stmt_purpose->bind_param("issss", $purpose_question_id, $purpose_response, $final_header_value, $transactionType, $final_question_rendering_value);
+        $stmt_purpose->bind_param("isssss", $purpose_question_id, $purpose_response, $final_header_value, $transactionType, $final_question_rendering_value, $comment);
         $stmt_purpose->execute();
 
         // Get the auto-generated `id` from the purpose insert. This is our `response_id`.
@@ -64,12 +68,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Step 2: Loop through the remaining answers and insert them with the same `response_id`.
         $stmt_rest = $conn->prepare(
-            "INSERT INTO tbl_responses (response_id, question_id, response, header, transaction_type, question_rendering) VALUES (?, ?, ?, ?, ?, ?)"
+            "INSERT INTO tbl_responses (response_id, question_id, response, header, transaction_type, question_rendering, comment) VALUES (?, ?, ?, ?, ?, ?, ?)"
         );
         if ($stmt_rest === false) {
             throw new Exception('Database prepare for subsequent inserts failed: ' . $conn->error);
         }
 
+        // Manually add Campus, Division, and Unit as responses
+        // Using negative question_ids to signify they are not from tbl_questionaire
+        $context_data = [
+            -1 => $campusName,
+            -2 => $divisionName,
+            -3 => $unitName
+        ];
+
+        foreach ($context_data as $q_id => $resp) {
+            // For these, header is '0' and rendering is null as they are just context.
+            $stmt_rest->bind_param("iisssss", $response_id, $q_id, $resp, $header_value, $transactionType, $final_question_rendering_value, $comment);
+            $stmt_rest->execute();
+        }
+
+        // Now process the actual answers from the form
         foreach ($answers as $q_id => $resp) {
             $question_id = $q_id;
             $response = is_array($resp) ? implode(', ', $resp) : $resp;
@@ -92,7 +111,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
 
             // Bind all parameters for the current record.
-            $stmt_rest->bind_param("iissss", $response_id, $question_id, $response, $final_header_value_rest, $transactionType, $final_question_rendering_value_rest);
+            $stmt_rest->bind_param("iisssss", $response_id, $question_id, $response, $final_header_value_rest, $transactionType, $final_question_rendering_value_rest, $comment);
             $stmt_rest->execute();
         }
 
