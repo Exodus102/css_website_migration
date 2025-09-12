@@ -1,16 +1,19 @@
-<div class="h-screen flex flex-col items-center justify-between relative bg-cover bg-center"
+<?php
+require_once 'auth/_dbConfig/_dbConfig.php';
+?>
+<div class="min-h-screen flex flex-col items-center justify-between relative bg-cover bg-center"
   style="background-image: url('resources/svg/landing-page.svg');">
 
-<!-- Logo -->
-<div class="flex items-center justify-center gap-2 mb-4 mt-10">
-  <img src="resources/svg/logo.svg" alt="URSatisfaction Logo" class="h-16">
-  <div class="text-left">
-    <h2 class="text-xl font-bold leading-tight">
-      <span class="text-[#95B3D3]">URS</span><span class="text-[#F1F7F9]">atisfaction</span>
-    </h2>
-    <p class="text-sm text-[#F1F7F9] leading-snug">We comply so URSatisfied</p>
+  <!-- Logo -->
+  <div class="flex items-center justify-center gap-2 mb-4 mt-10">
+    <img src="resources/svg/logo.svg" alt="URSatisfaction Logo" class="h-16">
+    <div class="text-left">
+      <h2 class="text-xl font-bold leading-tight">
+        <span class="text-[#95B3D3]">URS</span><span class="text-[#F1F7F9]">atisfaction</span>
+      </h2>
+      <p class="text-sm text-[#F1F7F9] leading-snug">We comply so URSatisfied</p>
+    </div>
   </div>
-</div>
 
 
   <!-- White Card -->
@@ -29,18 +32,56 @@
       <!-- Form -->
       <form action="pages/dynamic_page.php" method="POST" class="space-y-6">
 
+        <!-- Campus -->
+        <div>
+          <select id="campus" name="campus_id" class="w-full border border-[#1E1E1E] rounded-md px-3 py-2 text-sm text-[#1E1E1E] leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#064089]" required>
+            <option value="" hidden>Campus</option>
+            <?php
+            $result = $conn->query("SELECT id, campus_name FROM tbl_campus ORDER BY campus_name");
+            if ($result && $result->num_rows > 0) {
+              while ($row = $result->fetch_assoc()) {
+                echo "<option value='" . htmlspecialchars($row['id']) . "'>" . htmlspecialchars($row['campus_name']) . "</option>";
+              }
+            }
+            ?>
+          </select>
+        </div>
+
+        <!-- Division -->
+        <div>
+          <select id="division" name="division_id" class="w-full border border-[#1E1E1E] rounded-md px-3 py-2 text-sm text-[#1E1E1E] leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#064089]" required>
+            <option value="" hidden>Division</option>
+            <?php
+            $result_division = $conn->query("SELECT id, division_name FROM tbl_division ORDER BY division_name");
+            if ($result_division && $result_division->num_rows > 0) {
+              while ($row_division = $result_division->fetch_assoc()) {
+                echo "<option value='" . htmlspecialchars($row_division['id']) . "'>" . htmlspecialchars($row_division['division_name']) . "</option>";
+              }
+            }
+            ?>
+          </select>
+        </div>
+
+        <!-- Unit -->
+        <div>
+          <select id="unit" name="unit_id" class="w-full border border-[#1E1E1E] rounded-md px-3 py-2 text-sm text-[#1E1E1E] leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#064089]" required disabled>
+            <option value="" hidden>Unit</option>
+          </select>
+        </div>
+
+
         <!-- Transaction Type -->
         <div>
           <label class="block text-[#1E1E1E] text-sm mb-2 leading-snug">Transaction Type <span class="text-red-500">*</span></label>
           <div class="space-y-2">
             <label class="flex items-center space-x-2">
-              <input type="radio" name="transaction_type" value="Face-to-Face" 
-                     class="text-[#064089] focus:ring-[#064089] w-4 h-4" required>
+              <input type="radio" name="transaction_type" value="Face-to-Face"
+                class="text-[#064089] focus:ring-[#064089] w-4 h-4" required>
               <span class="text-sm text-[#1E1E1E] leading-relaxed">Face-to-Face</span>
             </label>
             <label class="flex items-center space-x-2">
-              <input type="radio" name="transaction_type" value="Online" 
-                     class="text-[#064089] focus:ring-[#064089] w-4 h-4" required>
+              <input type="radio" name="transaction_type" value="Online"
+                class="text-[#064089] focus:ring-[#064089] w-4 h-4" required>
               <span class="text-sm text-[#1E1E1E] leading-relaxed">Online</span>
             </label>
           </div>
@@ -69,12 +110,49 @@
     </div>
   </div>
 
-    <!-- Footer (left under the white div) -->
-    <div class="w-full max-w-[90%] mx-6 mt-4 mb-10 text-left">
-      <p class="text-[#F1F7F9] text-s">
-        © University of Rizal System - Customer Satisfaction Survey System
-      </p>
-    </div>
+  <!-- Footer (left under the white div) -->
+  <div class="w-full max-w-[90%] mx-6 mt-4 mb-10 text-left">
+    <p class="text-[#F1F7F9] text-s">
+      © University of Rizal System - Customer Satisfaction Survey System
+    </p>
+  </div>
 
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const campusSelect = document.getElementById('campus');
+      const divisionSelect = document.getElementById('division');
+      const unitSelect = document.getElementById('unit');
+
+      function fetchUnits() {
+        const campusId = campusSelect.value;
+        const divisionId = divisionSelect.value;
+
+        // Reset and disable unit dropdown, keeping the placeholder
+        unitSelect.length = 1;
+        unitSelect.disabled = true;
+
+        if (campusId && divisionId) {
+          fetch(`pages/get_cascading_data.php?campus_id=${campusId}&division_id=${divisionId}`)
+            .then(response => response.json())
+            .then(data => {
+              // Only enable if there are units to show
+              if (data.length > 0) {
+                data.forEach(unit => {
+                  const option = document.createElement('option');
+                  option.value = unit.id;
+                  option.textContent = unit.unit_name;
+                  unitSelect.appendChild(option);
+                });
+                unitSelect.disabled = false;
+              }
+            })
+            .catch(error => console.error('Error fetching units:', error));
+        }
+      }
+
+      campusSelect.addEventListener('change', fetchUnits);
+      divisionSelect.addEventListener('change', fetchUnits);
+    });
+  </script>
 
 </div>

@@ -4,6 +4,9 @@ require_once '../auth/_dbConfig/_dbConfig.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
   // Use isset() to avoid errors if a value wasn't submitted
+  $campusId = isset($_POST['campus_id']) ? (int)$_POST['campus_id'] : null;
+  $divisionId = isset($_POST['division_id']) ? (int)$_POST['division_id'] : null;
+  $unitId = isset($_POST['unit_id']) ? (int)$_POST['unit_id'] : null;
   $transactionTypeString = isset($_POST['transaction_type']) ? $_POST['transaction_type'] : 'Not provided';
   $purpose = isset($_POST['purpose']) ? trim($_POST['purpose']) : 'Not provided';
 
@@ -15,7 +18,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $transactionType = 1;
   }
 
+  // Fetch names based on IDs
+  $campusName = 'N/A';
+  if ($campusId) {
+    $stmt = $conn->prepare("SELECT campus_name FROM tbl_campus WHERE id = ?");
+    $stmt->bind_param("i", $campusId);
+    $stmt->execute();
+    $campusName = $stmt->get_result()->fetch_assoc()['campus_name'] ?? 'N/A';
+    $stmt->close();
+  }
+
+  $divisionName = 'N/A';
+  if ($divisionId) {
+    $stmt = $conn->prepare("SELECT division_name FROM tbl_division WHERE id = ?");
+    $stmt->bind_param("i", $divisionId);
+    $stmt->execute();
+    $divisionName = $stmt->get_result()->fetch_assoc()['division_name'] ?? 'N/A';
+    $stmt->close();
+  }
+
+  $unitName = 'N/A';
+  if ($unitId) {
+    $stmt = $conn->prepare("SELECT unit_name FROM tbl_unit WHERE id = ?");
+    $stmt->bind_param("i", $unitId);
+    $stmt->execute();
+    $unitName = $stmt->get_result()->fetch_assoc()['unit_name'] ?? 'N/A';
+    $stmt->close();
+  }
+
   // Use htmlspecialchars() to prevent XSS when displaying user input
+  $safeCampusName = htmlspecialchars($campusName, ENT_QUOTES, 'UTF-8');
+  $safeDivisionName = htmlspecialchars($divisionName, ENT_QUOTES, 'UTF-8');
+  $safeUnitName = htmlspecialchars($unitName, ENT_QUOTES, 'UTF-8');
   $safeTransactionType = htmlspecialchars($transactionType, ENT_QUOTES, 'UTF-8');
   $safePurpose = htmlspecialchars($purpose, ENT_QUOTES, 'UTF-8');
 } else {
@@ -35,7 +69,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 
 <body>
-  <div class="h-screen flex flex-col items-center justify-between relative bg-cover bg-center"
+  <div class="min-h-screen flex flex-col items-center justify-start relative bg-cover bg-center"
     style="background-image: url('../resources/svg/landing-page.svg');">
 
     <!-- Logo -->
@@ -50,7 +84,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </div>
 
     <!-- White Card -->
-    <div class="bg-white shadow-2xl rounded-lg w-full max-w-[90%] p-10 mx-6 min-h-[550px] flex items-center">
+    <div class="bg-white shadow-2xl rounded-lg w-full max-w-[90%] p-10 mx-6 min-h-[550px] flex items-center mb-auto">
       <!-- Inner wrapper -->
       <div class="w-full max-w-xl mx-auto space-y-10 px-10">
 
@@ -65,6 +99,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <!-- Form -->
         <form action="../function/_processAnswer/_processAnswer.php" method="POST" class="space-y-6">
           <!-- Hidden fields -->
+          <input type="hidden" name="campus_name" value="<?= $safeCampusName ?>">
+          <input type="hidden" name="division_name" value="<?= $safeDivisionName ?>">
+          <input type="hidden" name="unit_name" value="<?= $safeUnitName ?>">
           <input type="hidden" name="transaction_type" value="<?= $safeTransactionType ?>">
           <input type="hidden" name="purpose" value="<?= $safePurpose ?>">
 
@@ -144,11 +181,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
               echo "<p class='text-red-600 text-center'>No questions found for this transaction type.</p>";
             }
             $stmt->close();
-            $conn->close();
             ?>
           </div>
 
-         <!-- Buttons -->
+          <!-- Comment Box -->
+          <div class="space-y-2 pt-4">
+            <label for="comment" class="block text-[#1E1E1E] text-sm mb-2 leading-snug font-medium">Comments/Suggestions</label>
+            <textarea
+              id="comment"
+              name="comment"
+              rows="4"
+              class="w-full border border-[#1E1E1E] rounded-md px-3 py-2 text-sm text-[#1E1E1E] leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#064089]"
+              placeholder="Enter your comments or suggestions here..." required></textarea>
+          </div>
+
+          <!-- Buttons -->
           <div class="flex justify-between items-center pt-4">
             <!-- Back Arrow -->
             <a href="javascript:history.back()"
