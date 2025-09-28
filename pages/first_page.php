@@ -6,7 +6,7 @@ require_once 'auth/_dbConfig/_dbConfig.php';
 
   <!-- Logo -->
   <div class="flex items-center justify-center gap-2 mb-4 mt-10">
-    <img src="resources/svg/logo.svg" alt="URSatisfaction Logo" class="h-16">
+    <img src="resources/img/new-logo.png" alt="URSatisfaction Logo" class="h-16">
     <div class="text-left">
       <h2 class="text-xl font-bold leading-tight">
         <span class="text-[#95B3D3]">URS</span><span class="text-[#F1F7F9]">atisfaction</span>
@@ -69,6 +69,20 @@ require_once 'auth/_dbConfig/_dbConfig.php';
           </select>
         </div>
 
+        <!-- Customer Type -->
+        <div>
+          <select id="customer_type" name="customer_type_id" class="w-full border border-[#1E1E1E] rounded-md px-3 py-2 text-sm text-[#1E1E1E] leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#064089]" required>
+            <option value="" hidden>Customer Type</option>
+            <?php
+            $result_customer_type = $conn->query("SELECT id, customer_type FROM tbl_customer_type ORDER BY customer_type");
+            if ($result_customer_type && $result_customer_type->num_rows > 0) {
+              while ($row_customer_type = $result_customer_type->fetch_assoc()) {
+                echo "<option value='" . htmlspecialchars($row_customer_type['id']) . "'>" . htmlspecialchars($row_customer_type['customer_type']) . "</option>";
+              }
+            }
+            ?>
+          </select>
+        </div>
 
         <!-- Transaction Type -->
         <div>
