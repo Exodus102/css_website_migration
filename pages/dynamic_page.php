@@ -7,6 +7,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $campusId = isset($_POST['campus_id']) ? (int)$_POST['campus_id'] : null;
   $divisionId = isset($_POST['division_id']) ? (int)$_POST['division_id'] : null;
   $unitId = isset($_POST['unit_id']) ? (int)$_POST['unit_id'] : null;
+  $customerTypeId = isset($_POST['customer_type_id']) ? (int)$_POST['customer_type_id'] : null;
   $transactionTypeString = isset($_POST['transaction_type']) ? $_POST['transaction_type'] : 'Not provided';
   $purpose = isset($_POST['purpose']) ? trim($_POST['purpose']) : 'Not provided';
 
@@ -46,10 +47,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->close();
   }
 
+  $customerTypeName = 'N/A';
+  if ($customerTypeId) {
+    $stmt = $conn->prepare("SELECT customer_type FROM tbl_customer_type WHERE id = ?");
+    $stmt->bind_param("i", $customerTypeId);
+    $stmt->execute();
+    $customerTypeName = $stmt->get_result()->fetch_assoc()['customer_type'] ?? 'N/A';
+    $stmt->close();
+  }
+
   // Use htmlspecialchars() to prevent XSS when displaying user input
   $safeCampusName = htmlspecialchars($campusName, ENT_QUOTES, 'UTF-8');
   $safeDivisionName = htmlspecialchars($divisionName, ENT_QUOTES, 'UTF-8');
   $safeUnitName = htmlspecialchars($unitName, ENT_QUOTES, 'UTF-8');
+  $safeCustomerTypeName = htmlspecialchars($customerTypeName, ENT_QUOTES, 'UTF-8');
   $safeTransactionType = htmlspecialchars($transactionType, ENT_QUOTES, 'UTF-8');
   $safePurpose = htmlspecialchars($purpose, ENT_QUOTES, 'UTF-8');
 } else {
@@ -102,6 +113,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           <input type="hidden" name="campus_name" value="<?= $safeCampusName ?>">
           <input type="hidden" name="division_name" value="<?= $safeDivisionName ?>">
           <input type="hidden" name="unit_name" value="<?= $safeUnitName ?>">
+          <input type="hidden" name="customer_type_name" value="<?= $safeCustomerTypeName ?>">
           <input type="hidden" name="transaction_type" value="<?= $safeTransactionType ?>">
           <input type="hidden" name="purpose" value="<?= $safePurpose ?>">
 
