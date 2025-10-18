@@ -19,30 +19,46 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // --- Sentiment Analysis ---
-    $sentiment = null; // Default value
-    if (!empty($comment)) {
-        $api_url = 'http://127.0.0.1:5000/predict_sentiment';
-        $data = ['text' => $comment];
+    $sentiment = null; // Default to null.
 
-        $ch = curl_init($api_url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'Content-Length: ' . strlen(json_encode($data))
-        ]);
+    // Check if sentiment analysis is active from the database
+    $analysis_active = false;
+    $stmt_status = $conn->prepare("SELECT status FROM tbl_active WHERE id = 1"); // Assuming the setting is at id=1
+    if ($stmt_status) {
+        $stmt_status->execute();
+        $status_result = $stmt_status->get_result()->fetch_assoc();
+        if ($status_result && $status_result['status'] == 1) {
+            $analysis_active = true;
+        }
+        $stmt_status->close();
+    }
 
-        $response = curl_exec($ch);
-        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+    if ($analysis_active && !empty($comment)) {
+        try {
+            $api_url = 'http://127.0.0.1:5000/predict_sentiment';
+            $data = ['text' => $comment];
 
-        // Check if the request was successful and decode the sentiment
-        if ($httpcode == 200 && $response) {
-            $result = json_decode($response, true);
-            if (isset($result['sentiment'])) {
-                $sentiment = $result['sentiment']; // e.g., 'positive', 'negative', 'neutral'
+            $ch = curl_init($api_url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5); // Timeout for connection
+            curl_setopt($ch, CURLOPT_TIMEOUT, 10);      // Timeout for the entire request
+
+            $response = curl_exec($ch);
+            $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($httpcode == 200 && $response) {
+                $result = json_decode($response, true);
+                if (isset($result['sentiment'])) {
+                    $sentiment = $result['sentiment'];
+                }
             }
+        } catch (Exception $e) {
+            // Silently fail or log the error, but don't stop the script
+            // The $sentiment will remain null
         }
     }
 
