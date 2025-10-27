@@ -1,18 +1,15 @@
-from flask import Flask, request, jsonify
+import sys
 import joblib
 import re
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 import numpy as np
-import sys
 
-
-# Make sure you have the necessary NLTK data downloaded
+# Make sure you have the necessary NLTK data downloaded (run this in your Colab notebook if you haven't)
 # nltk.download('punkt', quiet=True)
 # nltk.download('stopwords', quiet=True)
 # nltk.download('punkt_tab', quiet=True) # Ensure punkt_tab is downloaded if needed for Tagalog
-
 
 # Function to load stop words from a file
 def load_stopwords(filepath):
@@ -24,8 +21,9 @@ def load_stopwords(filepath):
         print(f"Error: Stop words file not found at {filepath}. Using an empty set of stop words.")
         return set()
 
-# Load Tagalog stop words from a file
-tagalog_stop_words_file = 'tagalog_stopwords.txt' # <--- Update this path
+# Load Tagalog stop words from the same file used during training
+# Make sure to provide the full path to your tagalog_stopwords.txt file
+tagalog_stop_words_file = '/content/drive/MyDrive/Datasets/tagalog_stopwords.txt' # <--- Update this path
 tagalog_stop_words = load_stopwords(tagalog_stop_words_file)
 
 
@@ -48,27 +46,20 @@ def preprocess_text(text):
     return ' '.join(filtered_tokens)
 
 
-app = Flask(__name__)
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Please provide the text to analyze as a command-line argument.")
+        sys.exit(1)
 
-# Load the trained model and vectorizer
-try:
-    trained_model = joblib.load('sentiment_model.joblib')
-    trained_vectorizer = joblib.load('tfidf_vectorizer.joblib')
-except FileNotFoundError:
-    print("Error: Model or vectorizer file not found. Make sure 'sentiment_model.joblib' and 'tfidf_vectorizer.joblib' are in the same directory.")
-    sys.exit(1)
+    input_text = sys.argv[1]
 
-@app.route('/predict_sentiment', methods=['POST'])
-def predict():
-    """
-    API endpoint to receive text and return sentiment prediction.
-    Expects JSON data with a 'text' key.
-    """
-    data = request.get_json()
-    if 'text' not in data:
-        return jsonify({'error': 'No "text" key found in the request data'}), 400
-
-    input_text = data['text']
+    # Load the trained model and vectorizer
+    try:
+        trained_model = joblib.load('sentiment_model.joblib')
+        trained_vectorizer = joblib.load('tfidf_vectorizer.joblib')
+    except FileNotFoundError:
+        print("Error: Model or vectorizer file not found. Make sure 'sentiment_model.joblib' and 'tfidf_vectorizer.joblib' are in the same directory.")
+        sys.exit(1)
 
     # Preprocess the input text
     clean_input_text = preprocess_text(input_text)
@@ -85,23 +76,6 @@ def predict():
     class_labels = trained_model.classes_
     predicted_proba = probabilities[np.where(class_labels == predicted_class)][0]
 
-
-    return jsonify({
-        'sentiment': predicted_class,
-        'confidence': float(predicted_proba) # Convert to float for JSON serialization
-    })
-
-if __name__ == '__main__':
-    # To run this in a local environment for testing, you can use:
-    app.run(debug=True, port=5000)
-
-    # For deployment, you might use a production-ready server like gunicorn or uWSGI
-    # In Colab, you can use ngrok to expose the local server for testing
-    # from flask_ngrok import run_with_ngrok
-    # run_with_ngrok(app)
-    # app.run()
-    print("Flask app is set up. To run it locally for testing, uncomment the appropriate lines in the __main__ block.")
-    print("For Colab, you can use ngrok to expose the server.")
-    # Note: Running a Flask app directly in Colab's environment for production use
-    # is not recommended. Consider deployment options like Google Cloud Functions,
-    # App Engine, or Cloud Run for a production API.
+    # Print the prediction and confidence
+    print(f"Predicted sentiment: {predicted_class}")
+    print(f"Confidence: {predicted_proba:.4f}")
