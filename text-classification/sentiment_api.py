@@ -7,8 +7,11 @@ from nltk.tokenize import word_tokenize
 import numpy as np
 import sys
 
+# Add the directory containing the stop words file to sys.path
+# Replace with the actual path to your stop words file
+# sys.path.append('/content/drive/MyDrive/Datasets/')
 
-# Make sure you have the necessary NLTK data downloaded
+# Make sure you have the necessary NLTK data downloaded (run this in your Colab notebook if you haven't)
 # nltk.download('punkt', quiet=True)
 # nltk.download('stopwords', quiet=True)
 # nltk.download('punkt_tab', quiet=True) # Ensure punkt_tab is downloaded if needed for Tagalog
@@ -24,8 +27,7 @@ def load_stopwords(filepath):
         print(f"Error: Stop words file not found at {filepath}. Using an empty set of stop words.")
         return set()
 
-# Load Tagalog stop words from a file
-tagalog_stop_words_file = 'tagalog_stopwords.txt' # <--- Update this path
+tagalog_stop_words_file = 'tagalog_stopwords.txt'
 tagalog_stop_words = load_stopwords(tagalog_stop_words_file)
 
 
