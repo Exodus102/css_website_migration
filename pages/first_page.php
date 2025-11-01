@@ -1,5 +1,33 @@
 <?php
 require_once 'auth/_dbConfig/_dbConfig.php';
+
+// --- Pre-fill from URL parameters ---
+
+$selectedCampusId = null;
+$selectedDivisionId = null;
+$selectedUnitName = null; // We'll use the name for the unit, as it's populated by JS
+
+if (isset($_GET['campus'])) {
+  $campusName = trim($_GET['campus']);
+  $stmt = $conn->prepare("SELECT id FROM tbl_campus WHERE campus_name = ?");
+  $stmt->bind_param("s", $campusName);
+  $stmt->execute();
+  $selectedCampusId = $stmt->get_result()->fetch_assoc()['id'] ?? null;
+  $stmt->close();
+}
+
+if (isset($_GET['division'])) {
+  $divisionName = trim($_GET['division']);
+  $stmt = $conn->prepare("SELECT id FROM tbl_division WHERE division_name = ?");
+  $stmt->bind_param("s", $divisionName);
+  $stmt->execute();
+  $selectedDivisionId = $stmt->get_result()->fetch_assoc()['id'] ?? null;
+  $stmt->close();
+}
+
+if (isset($_GET['unit'])) {
+  $selectedUnitName = trim($_GET['unit']);
+}
 ?>
 <div class="min-h-screen flex flex-col items-center justify-between relative bg-cover bg-center"
   style="background-image: url('resources/svg/landing-page.svg');">
@@ -40,7 +68,8 @@ require_once 'auth/_dbConfig/_dbConfig.php';
             $result = $conn->query("SELECT id, campus_name FROM tbl_campus ORDER BY campus_name");
             if ($result && $result->num_rows > 0) {
               while ($row = $result->fetch_assoc()) {
-                echo "<option value='" . htmlspecialchars($row['id']) . "'>" . htmlspecialchars($row['campus_name']) . "</option>";
+                $selected = ($selectedCampusId == $row['id']) ? 'selected' : '';
+                echo "<option value='" . htmlspecialchars($row['id']) . "' {$selected}>" . htmlspecialchars($row['campus_name']) . "</option>";
               }
             }
             ?>
@@ -55,7 +84,8 @@ require_once 'auth/_dbConfig/_dbConfig.php';
             $result_division = $conn->query("SELECT id, division_name FROM tbl_division ORDER BY division_name");
             if ($result_division && $result_division->num_rows > 0) {
               while ($row_division = $result_division->fetch_assoc()) {
-                echo "<option value='" . htmlspecialchars($row_division['id']) . "'>" . htmlspecialchars($row_division['division_name']) . "</option>";
+                $selected = ($selectedDivisionId == $row_division['id']) ? 'selected' : '';
+                echo "<option value='" . htmlspecialchars($row_division['id']) . "' {$selected}>" . htmlspecialchars($row_division['division_name']) . "</option>";
               }
             }
             ?>
@@ -77,6 +107,7 @@ require_once 'auth/_dbConfig/_dbConfig.php';
             $result_customer_type = $conn->query("SELECT id, customer_type FROM tbl_customer_type ORDER BY customer_type");
             if ($result_customer_type && $result_customer_type->num_rows > 0) {
               while ($row_customer_type = $result_customer_type->fetch_assoc()) {
+                // No pre-selection for customer type from URL in this implementation
                 echo "<option value='" . htmlspecialchars($row_customer_type['id']) . "'>" . htmlspecialchars($row_customer_type['customer_type']) . "</option>";
               }
             }
@@ -136,6 +167,7 @@ require_once 'auth/_dbConfig/_dbConfig.php';
       const campusSelect = document.getElementById('campus');
       const divisionSelect = document.getElementById('division');
       const unitSelect = document.getElementById('unit');
+      const unitToSelect = <?= json_encode($selectedUnitName) ?>;
 
       function fetchUnits() {
         const campusId = campusSelect.value;
@@ -147,7 +179,7 @@ require_once 'auth/_dbConfig/_dbConfig.php';
 
         if (campusId && divisionId) {
           fetch(`pages/get_cascading_data.php?campus_id=${campusId}&division_id=${divisionId}`)
-            .then(response => response.json())
+            .then(response => response.ok ? response.json() : Promise.reject('Network response was not ok.'))
             .then(data => {
               // Only enable if there are units to show
               if (data.length > 0) {
@@ -158,12 +190,23 @@ require_once 'auth/_dbConfig/_dbConfig.php';
                   unitSelect.appendChild(option);
                 });
                 unitSelect.disabled = false;
+
+                // After populating, try to select the unit from the URL parameter
+                if (unitToSelect) {
+                  for (let i = 0; i < unitSelect.options.length; i++) {
+                    if (unitSelect.options[i].text === unitToSelect) {
+                      unitSelect.selectedIndex = i;
+                      break;
+                    }
+                  }
+                }
               }
             })
             .catch(error => console.error('Error fetching units:', error));
         }
       }
 
+      fetchUnits(); // Call on page load to handle pre-filled campus/division
       campusSelect.addEventListener('change', fetchUnits);
       divisionSelect.addEventListener('change', fetchUnits);
     });
