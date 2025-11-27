@@ -35,7 +35,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if ($analysis_active && !empty($comment)) {
         try {
-            $api_url = 'http://127.0.0.1:5000/predict_sentiment';
+            $api_url = 'http://127.0.0.1:5000/predict';
             $data = ['text' => $comment];
 
             $ch = curl_init($api_url);
