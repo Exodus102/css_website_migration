@@ -71,10 +71,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $row = $result->fetch_assoc();
         $response_id = ($row['max_response_id'] ?? 0) + 1;
 
+        // The fixed value for the 'uploaded' column as requested.
+        $uploaded_value = 0;
+
         // Step 2: Insert all answers for this submission with the new response_id.
         $stmt_header = $conn->prepare("SELECT header, question_rendering FROM tbl_questionaire WHERE question_id = ?");
         $stmt_answers = $conn->prepare(
-            "INSERT INTO tbl_responses (response_id, question_id, response, header, transaction_type, question_rendering, comment, analysis) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+            "INSERT INTO tbl_responses (response_id, question_id, response, header, transaction_type, question_rendering, comment, analysis, uploaded) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
         if ($stmt_header === false || $stmt_answers === false) {
             throw new Exception('Database prepare failed: ' . $conn->error);
@@ -92,7 +95,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // For these, header is '0' and rendering is null as they are just context.
             $header_value = '0';
             $rendering_value = null;
-            $stmt_answers->bind_param("iissssss", $response_id, $q_id, $resp, $header_value, $transactionType, $rendering_value, $comment, $sentiment);
+            $stmt_answers->bind_param("iissssssi", $response_id, $q_id, $resp, $header_value, $transactionType, $rendering_value, $comment, $sentiment, $uploaded_value);
             $stmt_answers->execute();
         }
 
@@ -112,7 +115,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $final_header_value = '1';
             $final_question_rendering_value = $question_rendering;
         }
-        $stmt_answers->bind_param("iissssss", $response_id, $purpose_question_id, $purpose_response, $final_header_value, $transactionType, $final_question_rendering_value, $comment, $sentiment);
+        $stmt_answers->bind_param("iissssssi", $response_id, $purpose_question_id, $purpose_response, $final_header_value, $transactionType, $final_question_rendering_value, $comment, $sentiment, $uploaded_value);
         $stmt_answers->execute();
 
         // Finally, process the actual answers from the form
@@ -135,7 +138,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
 
             // Bind all parameters for the current record.
-            $stmt_answers->bind_param("iissssss", $response_id, $question_id, $response, $final_header_value_rest, $transactionType, $final_question_rendering_value_rest, $comment, $sentiment);
+            $stmt_answers->bind_param("iissssssi", $response_id, $question_id, $response, $final_header_value_rest, $transactionType, $final_question_rendering_value_rest, $comment, $sentiment, $uploaded_value);
             $stmt_answers->execute();
         }
 
